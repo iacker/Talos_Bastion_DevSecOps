@@ -1,0 +1,116 @@
+# Homepage dashboard configuration
+# Chart: jameswynn/homepage v2.1.0
+
+image:
+  repository: ghcr.io/gethomepage/homepage
+  tag: latest
+
+service:
+  main:
+    type: NodePort
+    ports:
+      http:
+        port: 3000
+        nodePort: 30000
+
+env:
+  - name: HOMEPAGE_ALLOWED_HOSTS
+    value: "*"
+
+enableRbac: true
+
+serviceAccount:
+  create: true
+  name: homepage
+
+persistence:
+  logs:
+    enabled: false
+
+config:
+  settings:
+    title: Talos Cluster
+    favicon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/kubernetes.png
+    theme: dark
+    color: slate
+    headerStyle: clean
+    background:
+      image: https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=2560&q=80
+      blur: sm
+      opacity: 20
+    cardBlur: md
+    disableCollapse: true
+    hideVersion: true
+    layout:
+      - Infrastructure:
+          style: row
+          columns: 3
+          icon: mdi-server
+      - DevOps:
+          style: row
+          columns: 2
+          icon: mdi-rocket-launch
+      - Links:
+          style: row
+          columns: 4
+          icon: mdi-link
+
+  bookmarks:
+    - Links:
+        - Talos:
+            - href: https://www.talos.dev/
+              icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/talos.png
+        - Kubernetes:
+            - href: https://kubernetes.io/
+              icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/kubernetes.png
+        - Cilium:
+            - href: https://cilium.io/
+              icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cilium.png
+        - GitHub:
+            - href: https://github.com/
+              icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/github.png
+
+  services:
+    - Infrastructure:
+        - Harbor:
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/harbor.png
+            href: http://192.168.1.20:30080
+            description: Container Registry
+            ping: http://192.168.1.20:30080
+        - Gitea:
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/gitea.png
+            href: http://192.168.1.20:30300
+            description: Git Server
+            ping: http://192.168.1.20:30300
+        - Teleport:
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/teleport.png
+            href: https://192.168.1.20:32687
+            description: Zero Trust Access
+
+    - DevOps:
+        - ArgoCD:
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/argo-cd.png
+            href: http://192.168.1.20:30880
+            description: GitOps CD
+            ping: http://192.168.1.20:30880
+        - Hubble:
+            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cilium.png
+            href: http://192.168.1.20:31235
+            description: Network Observability
+            ping: http://192.168.1.20:31235
+
+  widgets:
+    - search:
+        provider: google
+        target: _blank
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+          hour12: false
+
+  kubernetes:
+    mode: disabled
+
+  docker: {}

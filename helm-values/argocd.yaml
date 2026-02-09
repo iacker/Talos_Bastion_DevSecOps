@@ -1,0 +1,13 @@
+# ArgoCD configuration
+# Chart: argo/argo-cd v9.4.1
+
+server:
+  service:
+    type: NodePort
+    nodePortHttp: 30880
+    nodePortHttps: 30443
+
+configs:
+  params:
+    server:
+      insecure: true  # Disable TLS (NodePort access)

@@ -1,0 +1,14 @@
+# Teleport configuration
+# Chart: teleport/teleport-cluster v18.6.6
+
+chartMode: standalone
+clusterName: teleport.local
+
+proxyListenerMode: multiplex
+
+service:
+  type: NodePort
+
+persistence:
+  enabled: true
+  size: 5Gi

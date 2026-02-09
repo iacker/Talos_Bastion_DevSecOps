@@ -1,0 +1,19 @@
+# Gitea configuration
+# Chart: gitea/gitea v12.5.0
+
+gitea:
+  admin:
+    username: gitea_admin
+    email: admin@local.dev
+    # password: <SET VIA --set gitea.admin.password=XXX>
+
+service:
+  http:
+    type: NodePort
+    nodePort: 30300
+  ssh:
+    type: NodePort
+    nodePort: 30222
+
+persistence:
+  size: 10Gi

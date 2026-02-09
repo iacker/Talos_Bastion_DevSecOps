@@ -1,0 +1,31 @@
+# Harbor configuration
+# Chart: harbor/harbor v1.18.2
+
+# harborAdminPassword: <SET VIA --set harborAdminPassword=XXX>
+
+expose:
+  type: nodePort
+  tls:
+    enabled: false
+  nodePort:
+    ports:
+      http:
+        nodePort: 30080
+      https:
+        nodePort: 30443
+
+externalURL: http://192.168.1.20:30080
+
+persistence:
+  persistentVolumeClaim:
+    registry:
+      size: 20Gi
+    database:
+      size: 5Gi
+    redis:
+      size: 1Gi
+    trivy:
+      size: 5Gi
+    jobservice:
+      jobLog:
+        size: 1Gi
