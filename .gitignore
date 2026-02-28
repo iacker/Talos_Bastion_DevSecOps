@@ -1,0 +1,18 @@
+# Talos generated configs (contain secrets)
+controlplane.yaml
+worker.yaml
+talosconfig
+
+# Kubernetes credentials
+kubeconfig
+*.kubeconfig
+
+# Editor
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
