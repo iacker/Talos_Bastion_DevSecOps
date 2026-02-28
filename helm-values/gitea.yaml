@@ -9,11 +9,9 @@ gitea:
 
 service:
   http:
-    type: NodePort
-    nodePort: 30300
+    type: ClusterIP
   ssh:
-    type: NodePort
-    nodePort: 30222
+    type: ClusterIP
 
 persistence:
   size: 10Gi

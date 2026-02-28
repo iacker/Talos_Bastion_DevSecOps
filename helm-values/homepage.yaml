@@ -7,11 +7,10 @@ image:
 
 service:
   main:
-    type: NodePort
+    type: ClusterIP
     ports:
       http:
         port: 3000
-        nodePort: 30000
 
 env:
   - name: HOMEPAGE_ALLOWED_HOSTS
@@ -74,30 +73,30 @@ config:
     - Infrastructure:
         - Harbor:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/harbor.png
-            href: http://192.168.1.20:30080
+            href: https://harbor.talos.local
             description: Container Registry
-            ping: http://192.168.1.20:30080
+            ping: https://harbor.talos.local
         - Gitea:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/gitea.png
-            href: http://192.168.1.20:30300
+            href: https://gitea.talos.local
             description: Git Server
-            ping: http://192.168.1.20:30300
+            ping: https://gitea.talos.local
         - Teleport:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/teleport.png
-            href: https://192.168.1.20:32687
+            href: https://teleport.talos.local:8443
             description: Zero Trust Access
 
     - DevOps:
         - ArgoCD:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/argo-cd.png
-            href: http://192.168.1.20:30880
+            href: https://argocd.talos.local
             description: GitOps CD
-            ping: http://192.168.1.20:30880
+            ping: https://argocd.talos.local
         - Hubble:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cilium.png
-            href: http://192.168.1.20:31235
+            href: https://hubble.talos.local
             description: Network Observability
-            ping: http://192.168.1.20:31235
+            ping: https://hubble.talos.local
 
   widgets:
     - search:

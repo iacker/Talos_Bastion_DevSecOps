@@ -4,17 +4,11 @@
 # harborAdminPassword: <SET VIA --set harborAdminPassword=XXX>
 
 expose:
-  type: nodePort
+  type: clusterIP
   tls:
     enabled: false
-  nodePort:
-    ports:
-      http:
-        nodePort: 30080
-      https:
-        nodePort: 30443
 
-externalURL: http://192.168.1.20:30080
+externalURL: https://harbor.talos.local
 
 persistence:
   persistentVolumeClaim:

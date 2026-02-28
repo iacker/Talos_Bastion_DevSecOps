@@ -1,0 +1,17 @@
+# Traefik Dashboard IngressRoute
+# traefik.talos.local → api@internal
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.talos.local`)
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService
+  tls: {}

@@ -2,12 +2,12 @@
 # Chart: teleport/teleport-cluster v18.6.6
 
 chartMode: standalone
-clusterName: teleport.local
+clusterName: teleport.talos.local
 
 proxyListenerMode: multiplex
 
 service:
-  type: NodePort
+  type: ClusterIP
 
 persistence:
   enabled: true

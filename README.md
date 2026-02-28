@@ -10,39 +10,65 @@ Configuration for a single-node Talos Linux cluster running on `192.168.1.20`.
 │                  (Immutable, API-driven OS)                 │
 ├─────────────────────────────────────────────────────────────┤
 │                   Kubernetes v1.33.0                        │
+├─────────────────────────────────────────────────────────────┤
+│  Cilium CNI (L2 Announcements + LB IPAM)                   │
+│  └── 192.168.1.240-250 pool on LAN                         │
+├─────────────────────────────────────────────────────────────┤
+│  Traefik Ingress (192.168.1.240)                           │
+│  ├── HTTPS :443 → IngressRoutes (*.talos.local)            │
+│  ├── TCP   :22  → Gitea SSH                                │
+│  └── TCP   :8443 → Teleport (TLS passthrough)              │
+├─────────────────────────────────────────────────────────────┤
+│  CoreDNS External (192.168.1.241)                          │
+│  └── *.talos.local → 192.168.1.240                         │
 ├──────────┬──────────┬──────────┬──────────┬────────────────┤
-│  Cilium  │  ArgoCD  │  Harbor  │  Gitea   │   Teleport     │
-│   CNI    │  GitOps  │ Registry │   Git    │    Access      │
-│ + Hubble │          │          │          │                │
+│  ArgoCD  │  Harbor  │  Gitea   │ Teleport │   Homepage     │
+│  GitOps  │ Registry │   Git    │  Access  │   Dashboard    │
 └──────────┴──────────┴──────────┴──────────┴────────────────┘
 ```
 
 ## Folder Structure
 
 ```
-talos/
 ├── patches/
-│   └── cilium.yaml          # Talos machine patch (disable default CNI)
+│   └── cilium.yaml                # Talos machine patch (disable default CNI)
 ├── helm-values/
-│   ├── argocd.yaml          # ArgoCD GitOps server
-│   ├── cilium.yaml          # Cilium CNI + Hubble observability
-│   ├── gitea.yaml           # Git server
-│   ├── harbor.yaml          # Container registry
-│   ├── homepage.yaml        # Cluster dashboard
-│   └── teleport.yaml        # Zero-trust access
+│   ├── argocd.yaml                # ArgoCD GitOps server
+│   ├── cilium.yaml                # Cilium CNI + Hubble + L2 announcements
+│   ├── coredns-external.yaml      # External CoreDNS (wildcard *.talos.local)
+│   ├── gitea.yaml                 # Git server
+│   ├── harbor.yaml                # Container registry
+│   ├── homepage.yaml              # Cluster dashboard
+│   ├── teleport.yaml              # Zero-trust access
+│   └── traefik.yaml               # Traefik ingress controller
+├── manifests/
+│   ├── cilium-lb-ipam-pool.yaml   # CiliumLoadBalancerIPPool (192.168.1.240-250)
+│   ├── cilium-l2-policy.yaml      # CiliumL2AnnouncementPolicy
+│   └── ingress/
+│       ├── argocd.yaml            # argocd.talos.local
+│       ├── harbor.yaml            # harbor.talos.local
+│       ├── gitea.yaml             # gitea.talos.local
+│       ├── gitea-ssh.yaml         # TCP :22 passthrough
+│       ├── hubble.yaml            # hubble.talos.local
+│       ├── homepage.yaml          # home.talos.local
+│       ├── teleport.yaml          # TCP :8443 TLS passthrough
+│       └── traefik-dashboard.yaml # traefik.talos.local
 └── README.md
 ```
 
 ## Services
 
-| Service  | Port  | URL                          | Purpose              |
-|----------|-------|------------------------------|----------------------|
-| Homepage | 30000 | http://192.168.1.20:30000    | Cluster dashboard    |
-| Harbor   | 30080 | http://192.168.1.20:30080    | Container registry   |
-| Gitea    | 30300 | http://192.168.1.20:30300    | Git server           |
-| ArgoCD   | 30880 | http://192.168.1.20:30880    | GitOps CD            |
-| Hubble   | 31235 | http://192.168.1.20:31235    | Network observability|
-| Teleport | 32687 | https://192.168.1.20:32687   | Zero-trust access    |
+| Service    | URL                                | Protocol        |
+|------------|------------------------------------|-----------------|
+| Homepage   | https://home.talos.local           | HTTPS           |
+| Harbor     | https://harbor.talos.local         | HTTPS           |
+| Gitea      | https://gitea.talos.local          | HTTPS           |
+| Gitea SSH  | ssh://git@192.168.1.240:22         | TCP             |
+| ArgoCD     | https://argocd.talos.local         | HTTPS           |
+| Hubble     | https://hubble.talos.local         | HTTPS           |
+| Teleport   | https://teleport.talos.local:8443  | TLS passthrough |
+| Traefik    | https://traefik.talos.local        | HTTPS           |
+| DNS        | 192.168.1.241:53                   | UDP/TCP         |
 
 ## Bootstrap Commands
 
@@ -76,14 +102,47 @@ helm repo add harbor https://helm.goharbor.io
 helm repo add gitea https://dl.gitea.io/charts
 helm repo add homepage https://jameswynn.github.io/helm-charts
 helm repo add teleport https://charts.releases.teleport.dev
+helm repo add traefik https://traefik.github.io/charts
+helm repo add coredns https://coredns.github.io/helm
 
-# Install (order matters for CNI)
-helm install cilium cilium/cilium -n kube-system -f talos/helm-values/cilium.yaml
-helm install argocd argo/argo-cd -n argocd --create-namespace -f talos/helm-values/argocd.yaml
-helm install harbor harbor/harbor -n harbor --create-namespace -f talos/helm-values/harbor.yaml --set harborAdminPassword=<PASSWORD>
-helm install gitea gitea/gitea -n gitea --create-namespace -f talos/helm-values/gitea.yaml --set gitea.admin.password=<PASSWORD>
-helm install homepage homepage/homepage -n homepage --create-namespace -f talos/helm-values/homepage.yaml
-helm install teleport teleport/teleport-cluster -n teleport --create-namespace -f talos/helm-values/teleport.yaml
+# Install Cilium CNI (must be first)
+helm install cilium cilium/cilium -n kube-system -f helm-values/cilium.yaml
+
+# Apply Cilium L2/IPAM CRDs
+kubectl apply -f manifests/cilium-lb-ipam-pool.yaml
+kubectl apply -f manifests/cilium-l2-policy.yaml
+
+# Install Traefik ingress controller
+helm install traefik traefik/traefik -n traefik --create-namespace -f helm-values/traefik.yaml
+
+# Install CoreDNS external (wildcard DNS)
+helm install coredns-external coredns/coredns -n coredns --create-namespace -f helm-values/coredns-external.yaml
+
+# Install workloads
+helm install argocd argo/argo-cd -n argocd --create-namespace -f helm-values/argocd.yaml
+helm install harbor harbor/harbor -n harbor --create-namespace -f helm-values/harbor.yaml --set harborAdminPassword=<PASSWORD>
+helm install gitea gitea/gitea -n gitea --create-namespace -f helm-values/gitea.yaml --set gitea.admin.password=<PASSWORD>
+helm install homepage homepage/homepage -n homepage --create-namespace -f helm-values/homepage.yaml
+helm install teleport teleport/teleport-cluster -n teleport --create-namespace -f helm-values/teleport.yaml
+
+# Apply IngressRoutes
+kubectl apply -f manifests/ingress/
+```
+
+### 5. Configure DNS on client
+
+Point your DNS to `192.168.1.241` so that `*.talos.local` resolves to `192.168.1.240`.
+
+**Windows (PowerShell as Admin):**
+```powershell
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet" -ServerAddresses ("192.168.1.241","1.1.1.1")
+```
+
+**WSL:**
+```bash
+# /etc/resolv.conf (or via /etc/wsl.conf generateResolvConf=false)
+nameserver 192.168.1.241
+nameserver 1.1.1.1
 ```
 
 ## GitOps with ArgoCD (Immutable Deployments)
@@ -91,7 +150,7 @@ helm install teleport teleport/teleport-cluster -n teleport --create-namespace -
 To make Helm deployments immutable and version-controlled:
 
 1. Push this config to your Git repo (Gitea or GitHub)
-2. Create ArgoCD Applications pointing to `talos/helm-values/`
+2. Create ArgoCD Applications pointing to `helm-values/`
 3. ArgoCD will sync and manage all deployments automatically
 
 Example ArgoCD Application:
@@ -105,8 +164,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: http://192.168.1.20:30300/your-org/your-repo.git
-    path: talos/helm-values
+    repoURL: https://gitea.talos.local/your-org/your-repo.git
+    path: helm-values
     targetRevision: main
     helm:
       valueFiles:
@@ -135,5 +194,7 @@ Sensitive values (passwords, tokens) are NOT stored in this repo. Use one of:
 | OS | Talos Linux | Yes - API-only, no SSH, read-only rootfs |
 | Cluster config | talosctl | Yes - declarative machine configs |
 | CNI | Cilium | Yes - Helm values in Git |
+| Networking | Cilium L2 + Traefik | Yes - LoadBalancer IPs + IngressRoutes in Git |
+| DNS | CoreDNS external | Yes - wildcard *.talos.local in Git |
 | Workloads | ArgoCD | Yes - GitOps sync from repo |
 | Secrets | sops-nix | Yes - encrypted in Git, decrypted at runtime |

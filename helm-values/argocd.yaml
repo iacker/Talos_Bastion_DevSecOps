@@ -3,11 +3,9 @@
 
 server:
   service:
-    type: NodePort
-    nodePortHttp: 30880
-    nodePortHttps: 30443
+    type: ClusterIP
 
 configs:
   params:
     server:
-      insecure: true  # Disable TLS (NodePort access)
+      insecure: true  # TLS terminated by Traefik

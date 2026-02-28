@@ -1,0 +1,44 @@
+# External CoreDNS for wildcard *.talos.local DNS resolution
+# Chart: coredns/coredns v1.x
+# LoadBalancer IP: 192.168.1.241 (via Cilium L2)
+# NOT the cluster DNS — standalone instance for LAN clients
+
+isClusterService: false
+
+serviceType: LoadBalancer
+
+service:
+  annotations:
+    io.cilium/lb-ipam-ips: "192.168.1.241"
+
+servers:
+  - zones:
+      - zone: talos.local
+    port: 53
+    plugins:
+      - name: log
+      - name: errors
+      - name: template
+        parameters: IN A talos.local
+        configBlock: |-
+          match .*\.talos\.local
+          answer "{{ .Name }} 60 IN A 192.168.1.240"
+          fallthrough
+      - name: template
+        parameters: IN A talos.local
+        configBlock: |-
+          match ^talos\.local
+          answer "{{ .Name }} 60 IN A 192.168.1.240"
+
+  - zones:
+      - zone: .
+    port: 53
+    plugins:
+      - name: log
+      - name: errors
+      - name: forward
+        parameters: . 1.1.1.1 8.8.8.8
+        configBlock: |-
+          policy sequential
+      - name: cache
+        parameters: 30

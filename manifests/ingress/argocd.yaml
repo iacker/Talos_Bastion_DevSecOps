@@ -1,0 +1,17 @@
+# ArgoCD IngressRoute
+# argocd.talos.local → argocd-server:80
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`argocd.talos.local`)
+      kind: Rule
+      services:
+        - name: argocd-server
+          port: 80
+  tls: {}

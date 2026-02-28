@@ -1,0 +1,12 @@
+# Cilium L2 Announcement Policy
+# Responds to ARP requests for LoadBalancer IPs on LAN interfaces
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: lan-l2-policy
+spec:
+  interfaces:
+    - ^enp.*
+    - ^eth.*
+  externalIPs: true
+  loadBalancerIPs: true

@@ -1,0 +1,65 @@
+# Traefik Ingress Controller configuration
+# Chart: traefik/traefik v36.x
+# LoadBalancer IP: 192.168.1.240 (via Cilium L2)
+
+service:
+  type: LoadBalancer
+  annotations:
+    io.cilium/lb-ipam-ips: "192.168.1.240"
+
+ports:
+  web:
+    port: 8080
+    exposedPort: 80
+    protocol: TCP
+    redirections:
+      entryPoint:
+        to: websecure
+        scheme: https
+  websecure:
+    port: 8443
+    exposedPort: 443
+    protocol: TCP
+    tls:
+      enabled: true
+  gitea-ssh:
+    port: 2222
+    exposedPort: 22
+    protocol: TCP
+  teleport:
+    port: 8444
+    exposedPort: 8443
+    protocol: TCP
+    tls:
+      enabled: false
+
+# TLS default self-signed certificate
+tlsStore:
+  default:
+    defaultGeneratedCert:
+      resolver: ""
+      domain:
+        main: "talos.local"
+        sans:
+          - "*.talos.local"
+
+# Enable Traefik CRD provider (IngressRoute)
+providers:
+  kubernetesCRD:
+    enabled: true
+    allowCrossNamespace: true
+
+# Disable sending anonymous usage data
+globalArguments: []
+
+# Dashboard accessible via IngressRoute (not exposed directly)
+ingressRoute:
+  dashboard:
+    enabled: false
+
+# Logs
+logs:
+  general:
+    level: INFO
+  access:
+    enabled: true
