@@ -1,5 +1,5 @@
 # Traefik Ingress Controller configuration
-# Chart: traefik/traefik v36.x
+# Chart: traefik/traefik v39.x
 # LoadBalancer IP: 192.168.1.240 (via Cilium L2)
 
 service:
@@ -9,29 +9,33 @@ service:
 
 ports:
   web:
-    port: 8080
+    port: 8000
     exposedPort: 80
     protocol: TCP
-    redirections:
-      entryPoint:
-        to: websecure
-        scheme: https
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
   websecure:
     port: 8443
     exposedPort: 443
     protocol: TCP
-    tls:
-      enabled: true
+    http:
+      tls:
+        enabled: true
   gitea-ssh:
     port: 2222
     exposedPort: 22
     protocol: TCP
+    expose:
+      default: true
   teleport:
     port: 8444
     exposedPort: 8443
     protocol: TCP
-    tls:
-      enabled: false
+    expose:
+      default: true
 
 # TLS default self-signed certificate
 tlsStore:
@@ -50,7 +54,8 @@ providers:
     allowCrossNamespace: true
 
 # Disable sending anonymous usage data
-globalArguments: []
+additionalArguments:
+  - "--global.sendanonymoususage=false"
 
 # Dashboard accessible via IngressRoute (not exposed directly)
 ingressRoute:
