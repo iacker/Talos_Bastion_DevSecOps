@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zeroclaw
+  namespace: zeroclaw
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`zeroclaw.talos.local`)
+      kind: Rule
+      services:
+        - name: zeroclaw
+          port: 42617
+  tls: {}

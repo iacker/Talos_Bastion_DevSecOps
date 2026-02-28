@@ -18,7 +18,6 @@ Owner: Erwan. Language: French preferred.
 - **L2 policy**: CiliumL2AnnouncementPolicy `lan-l2-policy` on interfaces `^enp.*` and `^eth.*`
 - **Ingress**: Traefik v3.6.8 (chart v39.x) at `192.168.1.240`
   - HTTPS :443 with self-signed wildcard cert `*.talos.local`
-  - TCP :22 for Gitea SSH
   - TCP :8443 for Teleport TLS passthrough
   - HTTP :80 redirects to HTTPS
 - **DNS**: CoreDNS external at `192.168.1.241`, resolves `*.talos.local` → `192.168.1.240`, forwards everything else to `1.1.1.1`/`8.8.8.8`
@@ -30,7 +29,7 @@ Owner: Erwan. Language: French preferred.
 |---------|-----------|-------|-----|--------|
 | ArgoCD | argocd | argo/argo-cd 9.4.1 | https://argocd.talos.local | Working |
 | Harbor | harbor | harbor/harbor 1.18.2 | https://harbor.talos.local | Working |
-| Gitea | gitea | gitea/gitea 12.5.0 | https://gitea.talos.local | Broken (valkey CrashLoop) |
+| ZeroClaw | zeroclaw | zeroclaw/zeroclaw 0.2.1 | https://zeroclaw.talos.local | Working |
 | Homepage | homepage | homepage/homepage 2.1.0 | https://home.talos.local | Working |
 | Teleport | teleport | teleport-cluster 18.6.6 | https://teleport.talos.local:8443 | Working |
 | Hubble UI | kube-system | (part of cilium) | https://hubble.talos.local | Working |
@@ -39,7 +38,7 @@ Owner: Erwan. Language: French preferred.
 
 ## Known Issues
 
-- **Gitea**: valkey-cluster pods in CrashLoopBackOff (pre-existing, not related to ingress changes). Gitea pod is Pending because of this.
+- **Gitea removed**: was broken (valkey CrashLoop), replaced by ZeroClaw.
 - **WSL network**: WSL is NAT'd and cannot reach `192.168.1.240/241`. Must test from Windows or use `kubectl port-forward`.
 - **CoreDNS external pod**: PodSecurity warning (runAsNonRoot) — non-blocking, pod runs fine.
 
@@ -49,8 +48,8 @@ Owner: Erwan. Language: French preferred.
 cilium    https://helm.cilium.io
 argo      https://argoproj.github.io/argo-helm
 harbor    https://helm.goharbor.io
-gitea     https://dl.gitea.io/charts
 homepage  https://jameswynn.github.io/helm-charts
+zeroclaw  https://niklasfrick.github.io/zeroclaw-helm
 teleport  https://charts.releases.teleport.dev
 traefik   https://traefik.github.io/charts
 coredns   https://coredns.github.io/helm
@@ -65,7 +64,7 @@ Pin these in `helm install --version` to ensure reproducibility:
 | cilium | cilium/cilium | 1.19.0 |
 | argocd | argo/argo-cd | 9.4.1 |
 | harbor | harbor/harbor | 1.18.2 |
-| gitea | gitea/gitea | 12.5.0 |
+| zeroclaw | zeroclaw/zeroclaw | 0.2.1 |
 | homepage | homepage/homepage | 2.1.0 |
 | teleport | teleport/teleport-cluster | 18.6.6 |
 | traefik | traefik/traefik | 39.0.2 |

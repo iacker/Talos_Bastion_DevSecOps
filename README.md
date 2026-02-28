@@ -34,14 +34,13 @@ Single-node Talos Linux Kubernetes cluster for homelab/DevSecOps. All services a
 ├─────────────────────────────────────────────────────────────┤
 │  Traefik Ingress (192.168.1.240)                           │
 │  ├── HTTPS :443 → IngressRoutes (*.talos.local)            │
-│  ├── TCP   :22  → Gitea SSH                                │
 │  └── TCP   :8443 → Teleport (TLS passthrough)              │
 ├─────────────────────────────────────────────────────────────┤
 │  CoreDNS External (192.168.1.241)                          │
 │  └── *.talos.local → 192.168.1.240                         │
 ├──────────┬──────────┬──────────┬──────────┬────────────────┤
-│  ArgoCD  │  Harbor  │  Gitea   │ Teleport │   Homepage     │
-│  GitOps  │ Registry │   Git    │  Access  │   Dashboard    │
+│  ArgoCD  │  Harbor  │ ZeroClaw │ Teleport │   Homepage     │
+│  GitOps  │ Registry │    AI    │  Access  │   Dashboard    │
 └──────────┴──────────┴──────────┴──────────┴────────────────┘
 ```
 
@@ -54,23 +53,22 @@ Single-node Talos Linux Kubernetes cluster for homelab/DevSecOps. All services a
 │   ├── argocd.yaml                # ArgoCD GitOps server
 │   ├── cilium.yaml                # Cilium CNI + Hubble + L2 announcements
 │   ├── coredns-external.yaml      # External CoreDNS (wildcard *.talos.local)
-│   ├── gitea.yaml                 # Git server
 │   ├── harbor.yaml                # Container registry
 │   ├── homepage.yaml              # Cluster dashboard
 │   ├── teleport.yaml              # Zero-trust access
-│   └── traefik.yaml               # Traefik ingress controller
+│   ├── traefik.yaml               # Traefik ingress controller
+│   └── zeroclaw.yaml              # ZeroClaw AI runtime
 ├── manifests/
 │   ├── cilium-lb-ipam-pool.yaml   # CiliumLoadBalancerIPPool (192.168.1.240-250)
 │   ├── cilium-l2-policy.yaml      # CiliumL2AnnouncementPolicy
 │   └── ingress/
 │       ├── argocd.yaml            # argocd.talos.local
 │       ├── harbor.yaml            # harbor.talos.local
-│       ├── gitea.yaml             # gitea.talos.local
-│       ├── gitea-ssh.yaml         # TCP :22 passthrough
 │       ├── hubble.yaml            # hubble.talos.local
 │       ├── homepage.yaml          # home.talos.local
 │       ├── teleport.yaml          # TCP :8443 TLS passthrough
-│       └── traefik-dashboard.yaml # traefik.talos.local
+│       ├── traefik-dashboard.yaml # traefik.talos.local
+│       └── zeroclaw.yaml          # zeroclaw.talos.local
 └── README.md
 ```
 
@@ -80,9 +78,8 @@ Single-node Talos Linux Kubernetes cluster for homelab/DevSecOps. All services a
 |------------|------------------------------------|-----------------|
 | Homepage   | https://home.talos.local           | HTTPS           |
 | Harbor     | https://harbor.talos.local         | HTTPS           |
-| Gitea      | https://gitea.talos.local          | HTTPS           |
-| Gitea SSH  | ssh://git@192.168.1.240:22         | TCP             |
 | ArgoCD     | https://argocd.talos.local         | HTTPS           |
+| ZeroClaw   | https://zeroclaw.talos.local       | HTTPS           |
 | Hubble     | https://hubble.talos.local         | HTTPS           |
 | Teleport   | https://teleport.talos.local:8443  | TLS passthrough |
 | Traefik    | https://traefik.talos.local        | HTTPS           |
@@ -129,8 +126,8 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule-
 helm repo add cilium https://helm.cilium.io
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo add harbor https://helm.goharbor.io
-helm repo add gitea https://dl.gitea.io/charts
 helm repo add homepage https://jameswynn.github.io/helm-charts
+helm repo add zeroclaw https://niklasfrick.github.io/zeroclaw-helm
 helm repo add teleport https://charts.releases.teleport.dev
 helm repo add traefik https://traefik.github.io/charts
 helm repo add coredns https://coredns.github.io/helm
@@ -164,15 +161,15 @@ helm install harbor harbor/harbor --version 1.18.2 \
   -n harbor --create-namespace -f helm-values/harbor.yaml \
   --set harborAdminPassword=<PASSWORD>
 
-helm install gitea gitea/gitea --version 12.5.0 \
-  -n gitea --create-namespace -f helm-values/gitea.yaml \
-  --set gitea.admin.password=<PASSWORD>
-
 helm install homepage homepage/homepage --version 2.1.0 \
   -n homepage --create-namespace -f helm-values/homepage.yaml
 
 helm install teleport teleport/teleport-cluster --version 18.6.6 \
   -n teleport --create-namespace -f helm-values/teleport.yaml
+
+helm install zeroclaw zeroclaw/zeroclaw --version 0.2.1 \
+  -n zeroclaw --create-namespace -f helm-values/zeroclaw.yaml \
+  --set secret.apiKey=<OPENROUTER_API_KEY>
 
 # Wait for Traefik CRDs to be registered, then apply IngressRoutes
 kubectl wait --for=condition=established crd/ingressroutes.traefik.io --timeout=60s
@@ -196,7 +193,7 @@ Set-DnsClientServerAddress -InterfaceAlias "Wi-Fi" -ServerAddresses ("192.168.1.
 
 **Alternative — hosts file (no DNS change needed):**
 ```powershell
-Add-Content C:\Windows\System32\drivers\etc\hosts "192.168.1.240 home.talos.local argocd.talos.local harbor.talos.local gitea.talos.local hubble.talos.local traefik.talos.local teleport.talos.local"
+Add-Content C:\Windows\System32\drivers\etc\hosts "192.168.1.240 home.talos.local argocd.talos.local harbor.talos.local zeroclaw.talos.local hubble.talos.local traefik.talos.local teleport.talos.local"
 ```
 
 **Linux / macOS:**

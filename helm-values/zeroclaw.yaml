@@ -1,0 +1,27 @@
+# ZeroClaw AI Runtime
+# Chart: zeroclaw/zeroclaw v0.2.1
+# Mode: gateway (webhook server)
+
+service:
+  type: ClusterIP
+  port: 42617
+
+config:
+  mode: gateway
+  provider: openrouter
+  model: ""
+  temperature: 0.7
+  allowPublicBind: true
+  requirePairing: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+persistence:
+  enabled: true
+  size: 5Gi

@@ -76,11 +76,11 @@ config:
             href: https://harbor.talos.local
             description: Container Registry
             ping: https://harbor.talos.local
-        - Gitea:
-            icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/gitea.png
-            href: https://gitea.talos.local
-            description: Git Server
-            ping: https://gitea.talos.local
+        - ZeroClaw:
+            icon: mdi-robot-outline
+            href: https://zeroclaw.talos.local
+            description: AI Runtime
+            ping: https://zeroclaw.talos.local
         - Teleport:
             icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/teleport.png
             href: https://teleport.talos.local:8443
